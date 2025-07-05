@@ -1,25 +1,20 @@
 const nodemailer = require('nodemailer');
 
-module.exports = async function sendFallback(texto) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.BOT_EMAIL,
-      pass: process.env.BOT_EMAIL_PASS
-    }
-  });
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'patagoniaserverbot@gmail.com',
+    pass: process.env.MAIL_PASSWORD,
+  },
+});
 
-  const mailOptions = {
-    from: process.env.BOT_EMAIL,
+async function send(message) {
+  await transporter.sendMail({
+    from: 'Sol bot <patagoniaserverbot@gmail.com>',
     to: 'patagoniaserverbot@gmail.com',
-    subject: 'SOL - Mensaje no reconocido',
-    text: `Frase sin intención detectada: "${texto}"`
-  };
+    subject: 'Mensaje no reconocido por Sol',
+    text: message,
+  });
+}
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log('Fallback enviado por mail.');
-  } catch (error) {
-    console.error('Error enviando mail de fallback:', error);
-  }
-};
+module.exports = { send };
