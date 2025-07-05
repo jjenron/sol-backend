@@ -9,8 +9,9 @@ app.use(bodyParser.json());
 
 app.post('/360webhook', async (req, res) => {
   try {
-    const message = req.body.messages?.[0]?.text?.body;
-    const from = req.body.messages?.[0]?.from;
+    const message = req.body?.messages?.[0]?.text?.body;
+    const from = req.body?.messages?.[0]?.from;
+
     console.log("📩 MENSAJE RECIBIDO DE WHATSAPP:", message);
 
     if (!message || !from) return res.sendStatus(200);
