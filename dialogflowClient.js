@@ -1,11 +1,12 @@
+
 const dialogflow = require('@google-cloud/dialogflow');
-const { v4: uuidv4 } = require('uuid');  // Usar uuid con nombre
+const { v4: uuidv4 } = require('uuid');
 
 const projectId = process.env.DIALOGFLOW_PROJECT_ID;
 const sessionClient = new dialogflow.SessionsClient();
 
 async function detectIntentFromText(text, sessionId) {
-  const session = sessionId?.toString() || uuidv4();  // <- Forzamos valor siempre
+  const session = (sessionId ? sessionId.toString() : uuidv4());
   const sessionPath = sessionClient.projectAgentSessionPath(projectId, session);
 
   const request = {
