@@ -9,7 +9,7 @@ app.use(bodyParser.json());
 
 app.post('/360webhook', async (req, res) => {
   try {
-    const messages = req.body?.messages;
+    const messages = req.body?.entry?.[0]?.changes?.[0]?.value?.messages;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       console.warn("⚠️ Mensaje de WhatsApp sin contenido válido:", JSON.stringify(req.body));
       return res.sendStatus(200);
