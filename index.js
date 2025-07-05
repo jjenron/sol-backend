@@ -7,20 +7,6 @@ const { sendWhatsappMessage } = require('./whatsappSender');
 const app = express();
 app.use(bodyParser.json());
 
-app.post('/webhook', async (req, res) => {
-  try {
-    const intent = req.body.queryResult.intent.displayName;
-    const responseText = req.body.queryResult.fulfillmentText || "Gracias por tu mensaje.";
-    console.log("INTENCIÓN DETECTADA:", intent);
-    console.log("RESPUESTA:", responseText);
-    res.json({ fulfillmentText: responseText });
-  } catch (error) {
-    console.error("ERROR /webhook:", error);
-    await fallbackMailer.send(`FALLBACK: ${JSON.stringify(req.body)}`);
-    res.json({ fulfillmentText: "Gracias por tu mensaje." });
-  }
-});
-
 app.post('/360webhook', async (req, res) => {
   try {
     const message = req.body.messages?.[0]?.text?.body;
