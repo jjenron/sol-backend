@@ -1,13 +1,20 @@
 const dialogflow = require('@google-cloud/dialogflow');
 const { v4: uuidv4 } = require('uuid');
 
-const projectId = process.env.DIALOGFLOW_PROJECT_ID;
-const sessionClient = new dialogflow.SessionsClient();
+const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+
+const sessionClient = new dialogflow.SessionsClient({
+  credentials: {
+    client_email: credentials.client_email,
+    private_key: credentials.private_key,
+  },
+  projectId: credentials.project_id,
+});
 
 async function detectIntentFromText(text, sessionId) {
   try {
     const cleanSessionId = (sessionId || uuidv4()).toString();
-    const sessionPath = sessionClient.projectAgentSessionPath(projectId, cleanSessionId);
+    const sessionPath = sessionClient.projectAgentSessionPath(credentials.project_id, cleanSessionId);
 
     const request = {
       session: sessionPath,
@@ -28,4 +35,4 @@ async function detectIntentFromText(text, sessionId) {
 }
 
 module.exports = { detectIntentFromText };
-// trigger redeploy
+
