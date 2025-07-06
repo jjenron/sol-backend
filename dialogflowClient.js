@@ -1,7 +1,9 @@
 const dialogflow = require('@google-cloud/dialogflow');
 const { v4: uuidv4 } = require('uuid');
 
-const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+const base64Key = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+const credentials = JSON.parse(Buffer.from(base64Key, 'base64').toString('utf-8'));
+
 
 const sessionClient = new dialogflow.SessionsClient({
   credentials: {
