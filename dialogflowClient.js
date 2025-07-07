@@ -4,7 +4,6 @@ const { v4: uuidv4 } = require('uuid');
 const base64Key = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 const credentials = JSON.parse(Buffer.from(base64Key, 'base64').toString('utf-8'));
 
-
 const sessionClient = new dialogflow.SessionsClient({
   credentials: {
     client_email: credentials.client_email,
@@ -15,8 +14,14 @@ const sessionClient = new dialogflow.SessionsClient({
 
 async function detectIntentFromText(text, sessionId) {
   try {
-    const cleanSessionId = (sessionId || uuidv4()).toString();
-    const sessionPath = sessionClient.projectAgentSessionPath(credentials.project_id, cleanSessionId);
+    // Validación y limpieza del sessionId
+    const cleanSessionId = (sessionId ? sessionId.toString() : uuidv4());
+
+    // Genera path de sesión
+    const sessionPath = sessionClient.projectAgentSessionPath(
+      credentials.project_id,
+      cleanSessionId
+    );
 
     const request = {
       session: sessionPath,
@@ -31,7 +36,7 @@ async function detectIntentFromText(text, sessionId) {
     const responses = await sessionClient.detectIntent(request);
     return responses[0]?.queryResult?.fulfillmentText || "No se pudo obtener respuesta.";
   } catch (error) {
-    console.error("ERROR detectIntentFromText:", error);
+    console.error("❌ ERROR detectIntentFromText:", error);
     return "Ocurrió un error al procesar tu mensaje.";
   }
 }
