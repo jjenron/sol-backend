@@ -28,7 +28,7 @@ async function detectIntentFromText(text, sessionId) {
       queryInput: {
         text: {
           text,
-          languageCode: 'es',
+          languageCode: 'es-419',
         },
       },
     };
