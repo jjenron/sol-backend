@@ -1,35 +1,40 @@
-async function sendWhatsappMessage(to, text) {
-  const url = 'https://waba-v2.360dialog.io/v1/messages';
+// whatsappSender.js
+
+const axios = require('axios');
+
+async function sendWhatsappMessage(to, templateName = 'prueba', languageCode = 'es_AR') {
+  const url = 'https://waba-v2.360dialog.io/messages';
   const headers = {
     'D360-API-KEY': process.env.D360_API_KEY,
     'Content-Type': 'application/json',
   };
 
   const data = {
+    messaging_product: 'whatsapp',
     to,
     type: 'template',
     template: {
-      namespace: 'cd5544d2_6cc2_4576_b344_2796be7a433d', // lo ves en 360dialog
-      name: 'bienvenida', // ej: "respuestabot_inicial"
-      language: {
-        code: 'es_AR',
-        policy: 'deterministic',
-      },
-      components: [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text } // si querés enviar `text` como parámetro
-          ],
-        },
-      ],
+      name: templateName,
+      language: { code: languageCode },
+      components: [], // Agregá si tenés variables dinámicas en la plantilla
     },
   };
 
   try {
     const response = await axios.post(url, data, { headers });
-    console.log("✅ Plantilla enviada:", response.data);
+
+    const wamid = response.data?.messages?.[0]?.id || null;
+    const wa_id = response.data?.contacts?.[0]?.wa_id || null;
+
+    console.log(`✅ Template sent successfully to ${wa_id}`);
+    console.log(`📨 WhatsApp Message ID: ${wamid}`);
+
+    return { success: true, wamid, wa_id };
   } catch (error) {
-    console.error("❌ Error al enviar plantilla:", error.response?.data || error.message);
+    console.error("❌ Error sending WhatsApp template:", error.response?.data || error.message);
+    return { success: false, error: error.response?.data || error.message };
   }
 }
+
+module.exports = { sendWhatsappMessage };
+
