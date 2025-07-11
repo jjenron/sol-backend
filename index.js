@@ -8,6 +8,9 @@ const { chatWithGPT } = require('./gptClient');
 const app = express();
 app.use(bodyParser.json());
 
+// Cache en memoria de últimos mensajes por número
+const messageCache = new Map(); // key: phone number, value: { text, timestamp }
+
 app.post('/360webhook', async (req, res) => {
   try {
     const change = req.body?.entry?.[0]?.changes?.[0]?.value;
@@ -24,6 +27,18 @@ app.post('/360webhook', async (req, res) => {
     }
 
     console.log("📩 MENSAJE RECIBIDO DE WHATSAPP:", textBody);
+
+    // Verificamos en cache si ya se procesó recientemente este mensaje
+    const lastMessage = messageCache.get(from);
+    const now = Date.now();
+
+    if (lastMessage && lastMessage.text === textBody && (now - lastMessage.timestamp < 10000)) {
+      console.log("⚠️ Mensaje repetido ignorado por cache");
+      return res.sendStatus(200);
+    }
+
+    // Guardamos en cache
+    messageCache.set(from, { text: textBody, timestamp: now });
 
     const dialogflowResponse = await detectIntentFromText(textBody, from);
     const intentName = dialogflowResponse?.intent?.displayName;
@@ -62,4 +77,5 @@ app.post('/360webhook', async (req, res) => {
 app.listen(3000, () => {
   console.log("Sol webhook listening on port 3000");
 });
+
 
