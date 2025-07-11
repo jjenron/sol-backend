@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const fallbackMailer = require('./fallbackMailer');
 const { detectIntentFromText } = require('./dialogflowClient');
 const { sendWhatsappMessage } = require('./whatsappSender');
+const { chatWithGPT } = require('./gptClient'); // nuevo módulo
 
 const app = express();
 app.use(bodyParser.json());
@@ -11,7 +12,6 @@ app.post('/360webhook', async (req, res) => {
   try {
     const change = req.body?.entry?.[0]?.changes?.[0]?.value;
 
-    // Ignorar eventos sin mensajes (ej: statuses, delivery, etc.)
     if (!change || !change.messages || !Array.isArray(change.messages) || change.messages.length === 0) {
       return res.sendStatus(200);
     }
@@ -26,14 +26,22 @@ app.post('/360webhook', async (req, res) => {
     console.log("📩 MENSAJE RECIBIDO DE WHATSAPP:", textBody);
 
     const dialogflowResponse = await detectIntentFromText(textBody, from);
-    const reply = dialogflowResponse || "Gracias por tu mensaje.";
+    let reply = dialogflowResponse?.fulfillmentText || "Gracias por tu mensaje.";
+    const intentName = dialogflowResponse?.intent?.displayName;
 
-    // Intento inicial con texto libre
+    console.log("🤖 INTENT DETECTADO:", intentName);
+
+    // Si cae en el intent de fallback, usar ChatGPT
+    if (intentName === "GPT Fallback Handler") {
+      console.log("🌐 Redirigiendo a ChatGPT...");
+      const gptResponse = await chatWithGPT(textBody);
+      reply = gptResponse || "No estoy seguro, pero podés preguntarme de otra forma.";
+    }
+
     let sent = await sendWhatsappMessage(from, reply, false);
 
-    // Si falla por fuera de ventana, reintenta con plantilla
     if (!sent.success && sent.error?.error?.code === 400) {
-      console.warn("⛔️ Mensaje fuera de ventana de sesión. Reintentando con plantilla.");
+      console.warn("⛔️ Fuera de ventana. Reintentando con plantilla...");
       sent = await sendWhatsappMessage(from, reply, true);
     }
 
@@ -52,4 +60,3 @@ app.post('/360webhook', async (req, res) => {
 app.listen(3000, () => {
   console.log("Sol webhook listening on port 3000");
 });
-
