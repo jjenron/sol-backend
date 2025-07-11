@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const fallbackMailer = require('./fallbackMailer');
 const { detectIntentFromText } = require('./dialogflowClient');
 const { sendWhatsappMessage } = require('./whatsappSender');
-const { chatWithGPT } = require('./gptClient'); // nuevo módulo
+const { chatWithGPT } = require('./gptClient');
 
 const app = express();
 app.use(bodyParser.json());
@@ -26,14 +26,16 @@ app.post('/360webhook', async (req, res) => {
     console.log("📩 MENSAJE RECIBIDO DE WHATSAPP:", textBody);
 
     const dialogflowResponse = await detectIntentFromText(textBody, from);
-    let reply = dialogflowResponse?.fulfillmentText || "Gracias por tu mensaje.";
     const intentName = dialogflowResponse?.intent?.displayName;
+    const isFallback = dialogflowResponse?.intent?.isFallback || false;
 
-    console.log("🤖 INTENT DETECTADO:", intentName);
+    console.log("🤖 INTENT DETECTADO:", intentName || 'undefined');
 
-    // Si cae en el intent de fallback, usar ChatGPT
-    if (intentName === "GPT Fallback Handler") {
-      console.log("🌐 Redirigiendo a ChatGPT...");
+    let reply = dialogflowResponse?.fulfillmentText;
+
+    // Si no hay respuesta de Dialogflow, o es fallback, usar GPT
+    if (!reply || isFallback || intentName === 'Default Fallback Intent' || !intentName) {
+      console.log("🌐 Redirigiendo a ChatGPT por falta de intent claro o fallback...");
       const gptResponse = await chatWithGPT(textBody);
       reply = gptResponse || "No estoy seguro, pero podés preguntarme de otra forma.";
     }
@@ -60,3 +62,4 @@ app.post('/360webhook', async (req, res) => {
 app.listen(3000, () => {
   console.log("Sol webhook listening on port 3000");
 });
+
