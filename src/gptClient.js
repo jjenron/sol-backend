@@ -32,4 +32,5 @@ async function consultarChatGPT(mensajeUsuario) {
   }
 }
 
-module.exports = { consultarChatGPT };
+module.exports = { chatWithGPT: consultarChatGPT };
+
