@@ -4,7 +4,7 @@ const fallbackMailer = require('./fallbackMailer');
 const { detectIntentFromText } = require('./dialogflowClient');
 const { sendWhatsappMessage } = require('./whatsappSender');
 const chatWithGPT = require('./gptClient'); // 💡 Este archivo exporta directamente la función
-const { getSession, updateSession } = require('./sessionManager');
+const { getSessionHistory, appendToSession } = require('./sessionManager'); // ✅ Corrección aquí
 
 const app = express();
 app.use(bodyParser.json());
@@ -53,15 +53,16 @@ app.post('/360webhook', async (req, res) => {
     if (!reply || isFallback || intentName === 'Default Fallback Intent' || !intentName) {
       console.log("🌐 Redirigiendo a ChatGPT por falta de intent claro o fallback...");
 
-      const session = getSession(from);
+      const session = getSessionHistory(from); // ✅ Corrección aquí
       const gptResponse = await chatWithGPT(textBody, session);
 
       // Actualizamos la sesión con el nuevo mensaje
-      updateSession(from, {
+      appendToSession(from, {
         role: 'user',
         content: textBody
       });
-      updateSession(from, {
+
+      appendToSession(from, {
         role: 'assistant',
         content: gptResponse || "No estoy seguro, pero podés preguntarme de otra forma."
       });
