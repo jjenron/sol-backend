@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 function getKnowledgeBase() {
-  const dir = path.join(__dirname, 'resources');
+  const dir = path.join(__dirname, '..', 'resources');
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.md') && f !== 'prompt.md');
 
   const contents = files.map(filename => {
@@ -15,7 +15,7 @@ function getKnowledgeBase() {
 }
 
 function getSystemPrompt() {
-  const promptPath = path.join(__dirname, 'resources', 'prompt.md');
+  const promptPath = path.join(__dirname, '..', 'resources', 'prompt.md');
   const basePrompt = fs.readFileSync(promptPath, 'utf8').trim();
   const knowledge = getKnowledgeBase();
 
@@ -33,3 +33,4 @@ ${knowledge}`;
 }
 
 module.exports = { getSystemPrompt };
+
