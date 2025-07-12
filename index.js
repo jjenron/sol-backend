@@ -9,7 +9,7 @@ const app = express();
 app.use(bodyParser.json());
 
 // Cache en memoria de últimos mensajes por número
-const messageCache = new Map(); // key: phone number, value: { text, timestamp }
+const messageCache = new Map(); // key: phone number, value: { messageId, text, timestamp }
 
 app.post('/360webhook', async (req, res) => {
   try {
@@ -19,26 +19,26 @@ app.post('/360webhook', async (req, res) => {
       return res.sendStatus(200);
     }
 
-    const from = change.messages[0]?.from;
-    const textBody = change.messages[0]?.text?.body;
+    const message = change.messages[0];
+    const from = message?.from;
+    const textBody = message?.text?.body;
+    const messageId = message?.id;
 
-    if (!textBody || !from) {
+    if (!textBody || !from || !messageId) {
       return res.sendStatus(200);
     }
 
     console.log("📩 MENSAJE RECIBIDO DE WHATSAPP:", textBody);
 
-    // Verificamos en cache si ya se procesó recientemente este mensaje
+    // Verificamos en cache si ya se procesó este ID de mensaje
     const lastMessage = messageCache.get(from);
-    const now = Date.now();
-
-    if (lastMessage && lastMessage.text === textBody && (now - lastMessage.timestamp < 10000)) {
-      console.log("⚠️ Mensaje repetido ignorado por cache");
+    if (lastMessage?.messageId === messageId) {
+      console.log("⚠️ Mensaje ya procesado (ID repetido). Ignorado.");
       return res.sendStatus(200);
     }
 
     // Guardamos en cache
-    messageCache.set(from, { text: textBody, timestamp: now });
+    messageCache.set(from, { messageId, text: textBody, timestamp: Date.now() });
 
     const dialogflowResponse = await detectIntentFromText(textBody, from);
     const intentName = dialogflowResponse?.intent?.displayName;
@@ -77,5 +77,6 @@ app.post('/360webhook', async (req, res) => {
 app.listen(3000, () => {
   console.log("Sol webhook listening on port 3000");
 });
+
 
 
