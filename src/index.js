@@ -3,7 +3,8 @@ const bodyParser = require('body-parser');
 const fallbackMailer = require('./fallbackMailer');
 const { detectIntentFromText } = require('./dialogflowClient');
 const { sendWhatsappMessage } = require('./whatsappSender');
-const chatWithGPT = require('./gptClient'); // 💡 Este archivo exporta directamente la función
+const { chatWithGPT } = require('./gptClient');
+ // 💡 Este archivo exporta directamente la función
 const { getSessionHistory, appendToSession } = require('./sessionManager'); // ✅ Corrección aquí
 
 const app = express();
